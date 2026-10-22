@@ -3,13 +3,17 @@
 pragma solidity 0.8.34;
 
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 /**
  * @title ERC20Token
  * @dev Implementation of the ERC20 token standard for the yield farming project.
  */
-contract ERC20Token is ERC20 {
-    constructor(string memory name, string memory symbol, uint256 initialSupply) ERC20(name, symbol) {
+contract ERC20Token is ERC20, Ownable {
+    constructor(string memory name, string memory symbol, uint256 initialSupply)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         _mint(msg.sender, initialSupply * (10 ** uint256(decimals())));
     }
 
@@ -18,7 +22,7 @@ contract ERC20Token is ERC20 {
      * @param to The address to receive the minted tokens.
      * @param amount The amount of tokens to mint.
      */
-    function mint(address to, uint256 amount) external {
+    function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
 
