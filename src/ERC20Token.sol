@@ -14,7 +14,7 @@ contract ERC20Token is ERC20, Ownable {
         ERC20(name, symbol)
         Ownable(msg.sender)
     {
-        _mint(msg.sender, initialSupply * (10 ** uint256(decimals())));
+        _mint(msg.sender, initialSupply);
     }
 
     /**
