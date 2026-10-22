@@ -28,10 +28,9 @@ contract ERC20Token is ERC20, Ownable {
 
     /**
      * @dev Burns tokens from the specified address.
-     * @param from The address to burn tokens from.
      * @param amount The amount of tokens to burn.
      */
-    function burn(address from, uint256 amount) external {
-        _burn(from, amount);
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
     }
 }
