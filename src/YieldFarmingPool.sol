@@ -214,7 +214,13 @@ contract YieldFarmingPool is Ownable, ReentrancyGuard {
      * @param amount The amount of reward tokens to transfer.
      */
     function _safeRewardTransfer(address to, uint256 amount) internal {
-        IERC20(rewardToken).safeTransferFrom(address(this), to, amount);
+        uint256 rewardBalance = rewardToken.balanceOf(address(this));
+        if (amount > rewardBalance) {
+            amount = rewardBalance;
+        }
+        if (amount > 0) {
+            rewardToken.safeTransfer(to, amount);
+        }
     }
 
     /**
@@ -223,13 +229,15 @@ contract YieldFarmingPool is Ownable, ReentrancyGuard {
      * @param userAddress The address of the user.
      * @return The amount of rewards the user is entitled to.
      */
-    function _calculateUserPoolRewards(bytes32 poolId, address userAddress) internal view returns (uint256) {
+    function _calculateUserPoolRewards(bytes32 poolId, address userAddress) internal returns (uint256) {
         Pool storage pool = pools[poolId];
         UserInfo storage user = userInfo[poolId][userAddress];
 
         uint256 rewardPerToken = pool.rewardPerTokenStored;
         if (pool.totalStaked > 0) {
-            rewardPerToken += (block.timestamp - pool.lastUpdateTime) * pool.rewardRate * 1e18 / pool.totalStaked;
+            uint256 timeElapsed = block.timestamp - pool.lastUpdateTime;
+            uint256 reward = timeElapsed * pool.rewardRate;
+            pool.rewardPerTokenStored += reward * 1e18 / pool.totalStaked;
         }
 
         return (user.amount * rewardPerToken / 1e18) - user.rewardDebt;
@@ -243,8 +251,9 @@ contract YieldFarmingPool is Ownable, ReentrancyGuard {
         Pool storage pool = pools[poolId];
         if (block.timestamp > pool.lastUpdateTime) {
             if (pool.totalStaked > 0) {
-                pool.rewardPerTokenStored += (block.timestamp - pool.lastUpdateTime) * pool.rewardRate * 1e18
-                    / pool.totalStaked;
+                uint256 timeElapsed = block.timestamp - pool.lastUpdateTime;
+                uint256 reward = timeElapsed * pool.rewardRate;
+                pool.rewardPerTokenStored += reward * 1e18 / pool.totalStaked;
             }
             pool.lastUpdateTime = block.timestamp;
         }
